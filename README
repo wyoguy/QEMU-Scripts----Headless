@@ -1,0 +1,124 @@
+INTRODUCTION
+------------
+
+I happen to think that QEMU-KVM is a great server virtualization package.
+
+Here is an example of what I mean by a "headless" machine running server virtualization:
+
+  * You buy cheap server hardware with a quad-core processor and 8 GB RAM
+  * You do a basic Ubuntu server install with a text-only console (no x-windows and no graphical desktop)
+  * you install QEMU with KVM (the package)
+  * You remove the monitor (hence headless) and do all your work via SSH console (using Putty)
+
+You now want to create virtual machines and manage them so you can have (for example):
+
+   * XP Pro running an Antivirus server/database
+   * Server 2008 R2 running some vendor application
+   * Server 2003 running as a Domain Controller
+   * Server 2000 running some ancient software that nobody has bothered to update
+
+All these running at the same time (or even more)
+
+Why Headless?
+-------------
+
+We don't want the overhead of X-Windows (or anything else we don't need).  
+We don't want to waste a monitor sitting on a server.
+
+
+Why QEMU-KVM?
+-------------
+
+I do know that the Vmware products (vmware-server, ESXi or vSphere) are good candidates for this kind of thing.
+There are limitations (either with licensing, or hardware) with some of these commercial products.
+
+QEMU-KVM is open-source and is a very mature/stable project.  It takes full advantage of the CPU virtualization extensions.
+It will run on pretty much any hardware that you can run Linux on. 
+
+QEMU-KVM has the ablity to do a direct (raw) write to a Logical Volume (created under the "Logical Volume Management" system).  This makes the guest virtual hard drives more efficient and also gives us some cool tools to work with. (For backup, expansion, etc.)
+
+
+Will I really be able to manage VMs from a command-line only?
+-------------------------------------------------------------
+
+Yes.  You have always been able to.  The documentation is out there.
+
+(You do not even need to use the Python scripts -- these are often used when run under a GUI)
+
+What are the kinds of things that you would do to manage VMs?
+
+Creating a new virtual machine:
+  Creating a new logical volume (which will serve as the hard-drive).
+  Assigning RAM, NIC, CPU-type
+  Point a virtual CDROM drive to an ISO image
+
+  We want to boot the guest from the virtual CD, install the guest operating system, the drivers for the virtual hardware, etc.
+
+We will need the ability to:
+  Change the CD (ISO Image) while the guest VM is still running.
+  Force the guest machine to Power-Off (quit) just in case it gets locked up.
+  Backup the guest machine completely (or even move it to another host-server) 
+  List the status of all the running virtual machines.
+
+How will I be able to see what is going on on the screen of the guest?
+---------------------------------------------------------------------
+
+VNC functionality is built into QEMU-KVM so that each guest machine can have it's own VNC Port.
+
+Each guest VM can have its own unique VNC password which can be set in the startup script for each VM.  If you install TigerVNC for Windows, you can easily set up a shortcut to the console of each of your VMs.
+
+Will Each VM be directly connected to my network?
+-------------------------------------------------
+Using the host's bridge (tun/tap) interface, yes.  Each guest machine is connected to the network and can have an IP address on the network like any other real machine.  
+
+Note: If you were to set up NATTING instead, then this would NOT be the case. As you know, NATTING is a basic form of firewall.
+
+I suggest that if you have a server with two network interface cards (dual NIC is common on server hardware) that you set up to separate bridges (with two separate IP addresses) and you can assign the guest machines to the separate bridges for load-balancing.
+
+Two network cards can be combined (bonding or "teaming") together for combined network speed.  This must be done via the hardware drivers and I will not get into that.  This is very vendor specific and can be quite complex.
+
+Target Audience
+---------------
+
+My Target audience is network administrators who may have already got their feet wet in both Linux and/or virtualization.
+The people who will appreciate this kind of documentation are the ones that can put together the hardware for a real kick-ass server using cheap parts.  
+
+Hardware
+--------
+I believe that a brand-new server with two quad-core AMD processors and 8GB of RAM and at least two decent-sized hard drives can be purchased for under $2,000.
+
+For speed, I recommend hardware-based striping (at least two drives).  Striping (RAID 0) will give you no redundancy and if any one of the drives in the RAID fails, you will lose everything.  (Not redundant at all).  If you combine Striping with mirroring ("RAID 10" with at least 4 drives) then you will at least have some redundancy.  You should be able to write a script that checks the status of the drives in the RAID (once a day) and will send you an e-mail when a drive fails.  (Vendor specific)
+
+Some may choose to use a software "RAID 0" or "RAID 10" which can be easily done, but seems pointless since most server motherboards will support hardware-based RAID.
+
+Backup Server
+-------------
+In a production environment (Since you are already buying really-cheap server hardware, right?), you may want to purchase two servers.  One could be used for testing and then you could house backup copies of your guest machines ready to fire-up at a moment's notice.
+
+One of the scripts that I have will copy the entire contents of a guest drive (while the guest is not running) through gzip (for speed) and through ssh (for connectivity) directly into the Logical Volume of another server.  You could also archive this into a gzip-file on a remote server and then push it into a LV at a later date.
+
+Why doesn't somebody just write an "Interface" that runs on Windows so that all this command-line stuff runs in the background and I don't have to think about it?
+-------------
+
+This could be done easily.  You could use AutoIT and a simple menu interface.  Commands could be issued to the server using Putty's PLINK.EXE program.  ISO images could be created and uploaded and inserted into the virtual machine with the click of a button.
+
+Unless I do this myself (I am thinking about it), I think that this will never get done.  For one thing, if you really want a graphical interface for a headless Virtualization server running on top of Linux, you may already have a product.
+
+Most of the "Virtual Machine" interest goes into folks wanting to run Windows XP applications under a Linux desktop.  For a headless server, VMWARE has allowed you to have "vSphere Hypervisor" (Formerly ESXi) for free -- but with limitations for the free version.
+
+A true desktop manager should allow you the ability to manage multiple simultaneous hosts.
+
+Will QEMU be able to emulate intel x86 processors while running on an ARM (CPU) host machine?
+---------------
+Probably not (at least not well enough for production use).  In theory, it is possible for software to completely emulate a totally different type of processor for the purposes of virtualization, but the performance and compatibility issues are phenominally difficult.
+
+Right now, you can still buy Intel and AMD processors for cheap servers.
+
+
+
+
+
+
+
+
+ 
